@@ -184,7 +184,7 @@
             position: absolute;
             top: 2px;
             right: 2px;
-            font-size: 10px;
+            font-size: 46px;
         }
         
         .caption-select {
@@ -1154,7 +1154,7 @@
                 // Calculate scaled size - use the same scale factor for both dimensions
                 const computedStyle = window.getComputedStyle(emojiOverlay);
                 const emojiSizeValue = parseFloat(computedStyle.fontSize);
-                const scaledEmojiSize = emojiSizeValue * scaleX;
+                const scaledEmojiSize = emojiSizeValue * scaleX * 1.2
                 
                 // Add emoji
                 ctx.font = `bold ${scaledEmojiSize}px Arial`;
