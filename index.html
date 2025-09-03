@@ -2,14 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mood Mirror - Fixed Emoji Size</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mood Mirror - Create Viral Memes with Your Mood</title>
     <style>
         :root {
             --primary: #6a11cb;
             --secondary: #2575fc;
+            --accent: #ff4e50;
             --light: #f8f9fa;
             --dark: #343a40;
+            --success: #28a745;
+            --premium: #FFD700;
         }
         
         * {
@@ -38,6 +41,23 @@
             width: 90%;
             max-width: 500px;
             text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .premium-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: var(--premium);
+            color: #000;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            transform: rotate(5deg);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 100;
         }
         
         h1 {
@@ -47,6 +67,12 @@
             background: linear-gradient(to right, var(--primary), var(--secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            color: var(--dark);
+            margin-bottom: 30px;
+            font-size: 1.1rem;
         }
         
         .btn {
@@ -68,7 +94,19 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
         
-        #cameraView, #editorView, #previewView {
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .btn-premium {
+            background: linear-gradient(to right, #FFD700, #FFA500);
+            color: #000;
+            font-weight: bold;
+        }
+        
+        #cameraView, #editorView, #previewView, #emojiSelectionView, #monetizationView {
             display: none;
             width: 100%;
         }
@@ -77,16 +115,39 @@
             width: 100%;
             border-radius: 10px;
             margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             max-height: 50vh;
             object-fit: contain;
         }
         
+        .emoji-tabs {
+            display: flex;
+            overflow-x: auto;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+        }
+        
+        .emoji-tab {
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-right: 10px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.3s;
+        }
+        
+        .emoji-tab.active {
+            background: var(--primary);
+            color: white;
+        }
+        
         .emoji-grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(6, 1fr);
             gap: 10px;
             margin: 20px 0;
-            max-height: 200px;
+            max-height: 300px;
             overflow-y: auto;
             padding: 10px;
             background: #f8f9fa;
@@ -106,6 +167,19 @@
         .emoji:hover {
             background: #e9ecef;
             transform: scale(1.2);
+        }
+        
+        .emoji.premium {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .emoji.premium::after {
+            content: "⭐";
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            font-size: 10px;
         }
         
         .caption-select {
@@ -147,25 +221,247 @@
         .memoji-overlay:active {
             cursor: grabbing;
         }
+        
+        .category-title {
+            margin-top: 20px;
+            color: var(--primary);
+            text-align: left;
+            font-weight: bold;
+        }
+        
+        .featured-memes {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .meme-sample {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        
+        .meme-sample:hover {
+            transform: scale(1.05);
+        }
+        
+        .meme-sample img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+        }
+        
+        .meme-sample p {
+            padding: 10px;
+            font-size: 14px;
+            background: white;
+            margin: 0;
+        }
+        
+        .caption-area {
+            margin: 20px 0;
+            width: 100%;
+        }
+        
+        .custom-caption {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #ced4da;
+            margin-top: 10px;
+            font-size: 16px;
+            display: none;
+        }
+        
+        .watermark {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 12px;
+            color: rgba(0,0,0,0.3);
+        }
+        
+        .ad-container {
+            width: 100%;
+            margin: 20px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            text-align: center;
+            min-height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .ad-placeholder {
+            color: #6c757d;
+            font-size: 14px;
+        }
+        
+        .premium-features {
+            margin: 20px 0;
+            padding: 15px;
+            background: linear-gradient(45deg, #fffaf0, #fffacd);
+            border-radius: 10px;
+            border: 2px dashed #FFD700;
+        }
+        
+        .premium-features h3 {
+            color: #000;
+            margin-bottom: 10px;
+        }
+        
+        .premium-features ul {
+            text-align: left;
+            margin: 10px 0;
+        }
+        
+        .premium-features li {
+            margin-bottom: 8px;
+        }
+        
+        @media (max-width: 768px) {
+            .memoji-overlay {
+                font-size: 8vw;
+            }
+            
+            .caption-select, .custom-caption {
+                font-size: 4vw;
+            }
+            
+            .emoji-grid {
+                grid-template-columns: repeat(5, 1fr);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .memoji-overlay {
+                font-size: 10vw;
+            }
+            
+            .caption-select, .custom-caption {
+                font-size: 5vw;
+            }
+            
+            .container {
+                padding: 15px;
+            }
+            
+            .featured-memes {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .btn {
+                padding: 12px 20px;
+                font-size: 16px;
+            }
+        }
+        
+        .viral-share {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .share-btn {
+            padding: 10px 15px;
+            border-radius: 50px;
+            background: #4267B2;
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .share-btn.twitter {
+            background: #1DA1F2;
+        }
+        
+        .share-btn.whatsapp {
+            background: #25D366;
+        }
+        
+        .share-btn.tiktok {
+            background: #000;
+        }
+        
+        .download-stats {
+            margin: 10px 0;
+            font-size: 14px;
+            color: #6c757d;
+        }
+        
+        .trending-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: var(--accent);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <div class="trending-badge">🔥 Trending</div>
+        
         <h1>Mood Mirror</h1>
-        <p>Your Daily Emoji Vibe</p>
+        <p class="subtitle">Create Viral Memes with Your Mood</p>
 
         <!-- Home View -->
         <div id="homeView">
             <button class="btn" onclick="showCamera()">Create Your Mood Meme</button>
             <p>OR</p>
             <button class="btn" onclick="uploadPhoto()">Choose from Gallery</button>
+            
+            <div class="viral-share">
+                <button class="share-btn" onclick="shareApp('facebook')">📱 Share</button>
+                <button class="share-btn twitter" onclick="shareApp('twitter')">🐦 Tweet</button>
+                <button class="share-btn whatsapp" onclick="shareApp('whatsapp')">💬 WhatsApp</button>
+            </div>
+            
+            <div class="download-stats">
+                <span id="downloadCount">1,247</span> people created memes today!
+            </div>
+            
+            <div class="category-title">Trending Memes</div>
+            <div class="featured-memes" id="featuredMemes">
+                <!-- Will be populated by JavaScript -->
+            </div>
+            
+            <div class="ad-container">
+                <div class="ad-placeholder">Sponsored Content 🔥</div>
+            </div>
+            
+            <button class="btn btn-premium" onclick="showMonetization()">⭐ Go Premium</button>
         </div>
 
         <!-- Camera View -->
         <div id="cameraView">
             <video id="cameraVideo" autoplay playsinline></video>
             <button class="btn" onclick="capturePhoto()">Capture Photo</button>
-            <button class="btn" onclick="showHome()">Cancel</button>
+            <button class="btn btn-secondary" onclick="showHome()">Cancel</button>
         </div>
 
         <!-- Editor View -->
@@ -173,40 +469,93 @@
             <div class="meme-container">
                 <img id="photoPreview" alt="Your photo" class="meme-image">
                 <div id="emojiOverlay" class="memoji-overlay">😊</div>
+                <div class="watermark">Made with Mood Mirror</div>
             </div>
             
-            <p>Select an Emoji:</p>
-            <div class="emoji-grid" id="emojiGrid">
-                <div class="emoji" onclick="selectEmoji('😊')">😊</div>
-                <div class="emoji" onclick="selectEmoji('😢')">😢</div>
-                <div class="emoji" onclick="selectEmoji('😠')">😠</div>
-                <div class="emoji" onclick="selectEmoji('😍')">😍</div>
-                <div class="emoji" onclick="selectEmoji('🤔')">🤔</div>
-                <div class="emoji" onclick="selectEmoji('😴')">😴</div>
-                <div class="emoji" onclick="selectEmoji('😎')">😎</div>
-                <div class="emoji" onclick="selectEmoji('🥳')">🥳</div>
-                <div class="emoji" onclick="selectEmoji('🤯')">🤯</div>
-                <div class="emoji" onclick="selectEmoji('😭')">😭</div>
-            </div>
+            <button class="btn" onclick="showEmojiSelection()">Select Emoji</button>
             
-            <p>Choose a Caption:</p>
-            <select class="caption-select" id="captionSelect">
-                <option value="My Monday brain trying to function...">My Monday brain trying to function...</option>
-                <option value="Me remembering that thing I said 5 years ago.">Me remembering that thing I said 5 years ago.</option>
-                <option value="My wallet after the weekend:">My wallet after the weekend:</option>
-                <option value="My serotonin levels right now.">My serotonin levels right now.</option>
-            </select>
+            <div class="caption-area">
+                <p>Choose a Caption:</p>
+                <select class="caption-select" id="captionSelect" onchange="handleCaptionChange()">
+                    <option value="">Select a caption...</option>
+                    <!-- Will be populated by JavaScript -->
+                </select>
+                <p>OR</p>
+                <input type="text" class="custom-caption" id="customCaption" placeholder="Type your own caption...">
+            </div>
             
             <button class="btn" onclick="generateMeme()">Preview Your Masterpiece!</button>
-            <button class="btn" onclick="showHome()">Start Over</button>
+            <button class="btn btn-secondary" onclick="showHome()">Start Over</button>
+            
+            <div class="ad-container">
+                <div class="ad-placeholder">Your Ad Here 🚀</div>
+            </div>
+        </div>
+
+        <!-- Emoji Selection View -->
+        <div id="emojiSelectionView">
+            <h2>Select an Emoji</h2>
+            <div class="emoji-tabs" id="emojiTabs">
+                <!-- Will be populated by JavaScript -->
+            </div>
+            
+            <div class="emoji-grid" id="emojiGrid">
+                <!-- Will be populated by JavaScript -->
+            </div>
+            
+            <div class="premium-features">
+                <h3>⭐ Premium Emojis</h3>
+                <p>Unlock exclusive emojis with Premium!</p>
+                <button class="btn btn-premium" onclick="showMonetization()">Unlock Premium</button>
+            </div>
+            
+            <button class="btn" onclick="hideEmojiSelection()">Confirm Selection</button>
         </div>
 
         <!-- Preview View -->
         <div id="previewView">
             <img id="finalMeme" alt="Your mood meme" class="meme-image">
+            
+            <div class="viral-share">
+                <button class="share-btn" onclick="shareMeme('facebook')">📱 Share</button>
+                <button class="share-btn twitter" onclick="shareMeme('twitter')">🐦 Tweet</button>
+                <button class="share-btn whatsapp" onclick="shareMeme('whatsapp')">💬 WhatsApp</button>
+                <button class="share-btn tiktok" onclick="shareMeme('tiktok')">🎵 TikTok</button>
+            </div>
+            
             <button class="btn" onclick="downloadMeme()">Download Meme</button>
-            <button class="btn" onclick="shareMeme()">Share Meme</button>
-            <button class="btn" onclick="startOver()">Create Another</button>
+            <button class="btn btn-secondary" onclick="startOver()">Create Another</button>
+            
+            <div class="premium-features">
+                <h3>Remove Watermark?</h3>
+                <p>Go Premium to download without watermark!</p>
+                <button class="btn btn-premium" onclick="showMonetization()">Remove Watermark</button>
+            </div>
+        </div>
+
+        <!-- Monetization View -->
+        <div id="monetizationView">
+            <h2>⭐ Mood Mirror Premium</h2>
+            <p>Upgrade to unlock amazing features!</p>
+            
+            <div class="premium-features">
+                <h3>Premium Features:</h3>
+                <ul>
+                    <li>✅ Remove Watermark from all memes</li>
+                    <li>✅ 100+ Exclusive Premium Emojis</li>
+                    <li>✅ Advanced Meme Templates</li>
+                    <li>✅ Premium Caption Library</li>
+                    <li>✅ Ad-Free Experience</li>
+                    <li>✅ Priority Support</li>
+                </ul>
+                
+                <h3>Choose Your Plan:</h3>
+                <button class="btn btn-premium" onclick="purchasePremium('monthly')">$2.99/month</button>
+                <button class="btn btn-premium" onclick="purchasePremium('yearly')">$19.99/year (Save 45%)</button>
+                <button class="btn btn-premium" onclick="purchasePremium('lifetime')">$49.99 (One-Time)</button>
+            </div>
+            
+            <button class="btn btn-secondary" onclick="showHome()">Maybe Later</button>
         </div>
     </div>
 
@@ -214,17 +563,377 @@
         // State variables
         let selectedEmoji = '😊';
         let userPhotoData = null;
-        let emojiSize = 60; // Store the emoji size
+        let currentEmojiCategory = 'smileys';
+        let selectedCaption = '';
+        let isPremium = false;
+        let downloadCount = 1247;
 
         // Elements
         const homeView = document.getElementById('homeView');
         const cameraView = document.getElementById('cameraView');
         const editorView = document.getElementById('editorView');
         const previewView = document.getElementById('previewView');
+        const emojiSelectionView = document.getElementById('emojiSelectionView');
+        const monetizationView = document.getElementById('monetizationView');
         const cameraVideo = document.getElementById('cameraVideo');
         const photoPreview = document.getElementById('photoPreview');
         const emojiOverlay = document.getElementById('emojiOverlay');
         const finalMeme = document.getElementById('finalMeme');
+        const emojiTabs = document.getElementById('emojiTabs');
+        const emojiGrid = document.getElementById('emojiGrid');
+        const captionSelect = document.getElementById('captionSelect');
+        const customCaption = document.getElementById('customCaption');
+        const featuredMemes = document.getElementById('featuredMemes');
+        const downloadCountElement = document.getElementById('downloadCount');
+
+        // Hundreds of emojis organized by category
+        const emojiCategories = {
+            smileys: ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇", "🙂", "🙃", "😉", "😌", "😍", "🥰", "😘", "😗", "😙", "😚", "😋", "😛", "😝", "😜", "🤪", "🤨", "🧐", "🤓", "😎", "🤩", "🥳", "😏", "😒", "😞", "😔", "😟", "😕", "🙁", "☹️", "😣", "😖", "😫", "😩", "🥺", "😢", "😭", "😤", "😠", "😡", "🤬", "🤯", "😳", "🥵", "🥶", "😱", "😨", "😰", "😥", "😓", "🫣", "🤗", "🫡", "🤔", "🫢", "🤭", "🤫", "🤥", "😶", "🫠", "😐", "🫤", "😑", "😬", "🙄", "😯", "😦", "😧", "😮", "😲", "🥱", "😴", "🤤", "😪", "😵", "🥴", "🤐", "🥲", "🤢", "🤮", "🤧", "😷", "🤒", "🤕"],
+            animals: ["🐵", "🐒", "🦍", "🦧", "🐶", "🐕", "🦮", "🐕‍🦺", "🐩", "🐺", "🦊", "🦝", "🐱", "🐈", "🐈‍⬛", "🦁", "🐯", "🐅", "🐆", "🐴", "🐎", "🦄", "🦓", "🦌", "🦬", "🐮", "🐂", "🐃", "🐄", "🐷", "🐖", "🐗", "🐽", "🐏", "🐑", "🐐", "🐪", "🐫", "🦙", "🦒", "🐘", "🦣", "🦏", "🦛", "🐭", "🐁", "🐀", "🐹", "🐰", "🐇", "🐿️", "🦫", "🦔", "🦇", "🐻", "🐻‍❄️", "🐨", "🐼", "🦥", "🦦", "🦨", "🦘", "🦡", "🐾", "🦃", "🐔", "🐓", "🐣", "🐤", "🐥", "🐦", "🐧", "🕊️", "🦅", "🦆", "🦢", "🦉", "🦤", "🪶", "🦩", "🦜", "🐸", "🐊", "🐢", "🦎", "🐍", "🐲", "🐉", "🦕", "🦖", "🐳", "🐋", "🐬", "🦭", "🐟", "🐠", "🐡", "🦈", "🐙", "🐚", "🐌", "🦋", "🐛", "🐜", "🐝", "🪲", "🐞", "🦗", "🪳", "🕷️", "🕸️", "🦂", "🦟", "🪰", "🪱", "🦠"],
+            nature: ["💐", "🌸", "💮", "🏵️", "🌹", "🥀", "🌺", "🌻", "🌼", "🌷", "🌱", "🪴", "🌲", "🌳", "🌴", "🌵", "🌾", "🌿", "☘️", "🍀", "🍁", "🍂", "🍃", "🪹", "🪺", "🍄", "🍇", "🍈", "🍉", "🍊", "🍋", "🍌", "🍍", "🥭", "🍎", "🍏", "🍐", "🍑", "🍒", "🍓", "🫐", "🥝", "🍅", "🫒", "🥥", "🥑", "🍆", "🥔", "🥕", "🌽", "🌶️", "🫑", "🥒", "🥬", "🥦", "🧄", "🧅", "🍄", "🥜", "🌰", "🫘", "🍞", "🥐", "🥖", "🫓", "🥨", "🥯", "🥞", "🧇", "🧀", "🍖", "🍗", "🥩", "🥓", "🍔", "🍟", "🍕", "🌭", "🥪", "🌮", "🌯", "🫔", "🥙", "🧆", "🥚", "🍳", "🥘", "🍲", "🫕", "🥣", "🥗", "🍿", "🧈", "🧂", "🥫", "🍝", "🍱", "🍘", "🍙", "🍚", "🍛", "🍜", "🍠", "🍢", "🍣", "🍤", "🍥", "🥮", "🍡", "🥟", "🥠", "🥡", "🍦", "🍧", "🍨", "🍩", "🍪", "🎂", "🍰", "🧁", "🥧", "🍫", "🍬", "🍭", "🍮", "🍯", "🍼", "🥛", "☕", "🫖", "🍵", "🍶", "🍾", "🍷", "🍸", "🍹", "🍺", "🍻", "🥂", "🥃", "🫗", "🥤", "🧋", "🧃", "🧉", "🧊"],
+            symbols: ["❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎", "💔", "❤️‍🔥", "❤️‍🩹", "💕", "💞", "💓", "💗", "💖", "💘", "💝", "💟", "☮️", "✝️", "☪️", "🕉️", "☸️", "✡️", "🔯", "🕎", "☯️", "☦️", "🛐", "⛎", "♈", "♉", "♊", "♋", "♌", "♍", "♎", "♏", "♐", "♑", "♒", "♓", "🆔", "⚛️", "🉑", "☢️", "☣️", "📴", "📳", "🈶", "🈚", "🈸", "🈺", "🈷️", "✴️", "🆚", "💮", "🉐", "㊙️", "㊗️", "🈴", "🈵", "🈹", "🈲", "🅰️", "🅱️", "🆎", "🆑", "🅾️", "🆘", "❌", "⭕", "🛑", "⛔", "📛", "🚫", "💯", "💢", "♨️", "🚷", "🚯", "🚳", "🚱", "🔞", "📵", "🚭", "❗", "❕", "❓", "❔", "‼️", "⁉️", "🔅", "🔆", "〽️", "⚠️", "🚸", "🔱", "⚜️", "🔰", "♻️", "✅", "🈯", "💹", "❇️", "✳️", "❎", "🌐", "💠", "Ⓜ️", "🌀", "💤", "🏧", "🚾", "♿", "🅿️", "🛗", "🈳", "🈂️", "🛂", "🛃", "🛄", "🛅", "🚹", "🚺", "🚼", "⚧️", "🚻", "🚮", "🎦", "📶", "🈁", "🔣", "🔤", "🔡", "🔠", "🆖", "🆗", "🆙", "🆒", "🆕", "🆓", "0️⃣", "1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟", "🔢", "#️⃣", "*️⃣", "⏏️", "▶️", "⏸️", "⏯️", "⏹️", "⏺️", "⏭️", "⏮️", "⏩", "⏪", "⏫", "⏬", "◀️", "🔼", "🔽", "➡️", "⬅️", "⬆️", "⬇️", "↗️", "↘️", "↙️", "↖️", "↕️", "↔️", "↪️", "↩️", "⤴️", "⤵️", "🔀", "🔁", "🔂", "🔄", "🔃", "🎵", "🎶", "➕", "➖", "➗", "♾️", "💲", "💱", "™️", "©️", "®️", "〰️", "➰", "➿", "🔚", "🔙", "🔛", "🔝", "🔜"]
+        };
+
+        // Premium emojis
+        const premiumEmojis = ["🚀", "🌟", "🎯", "🔥", "💎", "🦄", "👑", "🤖", "🎨", "⚡", "💫", "✨", "🎭", "🎪", "🎢", "🎡", "🏆", "🥇", "🥈", "🥉", "🏅", "🎖️", "🏵️", "🎗️", "🎁", "🎉", "🎊", "🎈", "💌", "💘", "💝", "💖", "💗", "💓", "💞", "💕", "💟", "❣️", "💔", "❤️‍🔥", "❤️‍🩹", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎", "💋", "👄", "👅", "👂", "👃", "👁️", "👀", "🧠", "🦴", "🦷", "🦴", "💀", "👻", "👽", "🤡", "💩", "😺", "😸", "😹", "😻", "😼", "😽", "🙀", "😿", "😾"];
+
+        // Hundreds of meme captions organized by category
+        const memeCaptions = {
+            mood: [
+                "My Monday brain trying to function...",
+                "Me remembering that thing I said 5 years ago.",
+                "My wallet after the weekend:",
+                "My serotonin levels right now.",
+                "My will to live on a Monday.",
+                "It's 8 AM. I'm already done.",
+                "My brain cells after that meeting.",
+                "Me realizing what I said 5 years ago.",
+                "Wait, it's already Friday?",
+                "When someone says 'We need to talk'.",
+                "My reaction to your opinion.",
+                "I have several questions.",
+                "Me pretending to listen.",
+                "My bank account.",
+                "My motivation.",
+                "This week lasting 84 years.",
+                "My main character energy today.",
+                "My confidence vs. my skills.",
+                "Me, an intellectual.",
+                "My stomach after that last decision.",
+                "My mental health.",
+                "My brain on caffeine.",
+                "My willpower avoiding snacks.",
+                "My social battery right now.",
+                "My productivity level.",
+                "My anxiety at 3 AM.",
+                "My last two brain cells.",
+                "My patience running out.",
+                "My soul leaving my body during small talk.",
+                "My energy after one social interaction."
+            ],
+            relatable: [
+                "When you finally understand the assignment.",
+                "When the WiFi connects automatically.",
+                "When you find money in your old jeans.",
+                "When the teacher says 'no homework'.",
+                "When you avoid someone you know in public.",
+                "When you send a text and immediately regret it.",
+                "When you're the last one to get the joke.",
+                "When you try to be cool in front of your crush.",
+                "When your parents are proud of you.",
+                "When you remember embarrassing childhood memories.",
+                "When you're home alone and hear a noise.",
+                "When you successfully parallel park on first try.",
+                "When you pretend to work when boss walks by.",
+                "When you're watching a movie and recognize an actor.",
+                "When you try to sneak food into the movie theater.",
+                "When you're singing in the car and make eye contact.",
+                "When you're trying to be quiet but everything is loud.",
+                "When you see your ex looking better than you.",
+                "When you're about to sneeze but it goes away.",
+                "When you're telling a story and no one is listening."
+            ],
+            popCulture: [
+                "That's what she said. - Michael Scott",
+                "Why are you the way that you are? - Michael Scott",
+                "I'm not superstitious, but I am a little stitious. - Michael Scott",
+                "I declare bankruptcy! - Michael Scott",
+                "How the turntables... - Michael Scott",
+                "You miss 100% of the shots you don't take. - Wayne Gretzky - Michael Scott",
+                "I'm ready to get hurt again. - Michael Scott",
+                "I'm not a hero. I'm a high-functioning sociopath. - Sherlock",
+                "Winter is coming. - Game of Thrones",
+                "You know nothing, Jon Snow. - Game of Thrones",
+                "Hold the door! - Game of Thrones",
+                "I am the one who knocks. - Breaking Bad",
+                "Say my name. - Breaking Bad",
+                "I am the danger. - Breaking Bad",
+                "I have the high ground! - Star Wars",
+                "Hello there. - Star Wars",
+                "This is the way. - The Mandalorian",
+                "I have a bad feeling about this. - Star Wars",
+                "May the force be with you. - Star Wars"
+            ],
+            funny: [
+                "This is fine. Everything is fine.",
+                "Wait, that's illegal.",
+                "Ah yes, the floor here is made of floor.",
+                "They had us in the first half, not gonna lie.",
+                "Is this a pigeon?",
+                "I've never been so offended by something I 100% agree with.",
+                "Listen here, you little shit.",
+                "But that's none of my business.",
+                "That's a bold strategy, Cotton. Let's see if it pays off.",
+                "Cool story, bro.",
+                "You had one job.",
+                "I don't know what I expected.",
+                "Well, well, well, how the turntables...",
+                "I've made a huge mistake.",
+                "There's always money in the banana stand.",
+                "I'm a monster!",
+                "Her?",
+                "I've made a huge tiny mistake.",
+                "It's an illusion, Michael.",
+                "I don't understand the question, and I won't respond to it."
+            ]
+        };
+
+        // Premium captions
+        const premiumCaptions = [
+            "When you're the main character but forgot your lines",
+            "My brain during small talk: 🎪🤹‍♂️🎭",
+            "Me trying to adult: 🤡🌍",
+            "My productivity: 📉📉📉",
+            "When someone says 'we need to talk': 💀☠️⚰️",
+            "My social skills: 🦔🎤",
+            "My confidence: 🚀🌕 | My skills: 🐌🛌",
+            "Me pretending to work: 🎭💼🤫",
+            "My bank account: 🕳️👀🌀",
+            "My mental health: 🎢🌪️🎭"
+        ];
+
+        // Initialize the app
+        function initApp() {
+            populateEmojiTabs();
+            showEmojiCategory('smileys');
+            populateCaptionDropdown();
+            populateFeaturedMemes();
+            updateDownloadCount();
+            
+            // Set initial emoji position
+            emojiOverlay.style.left = '50%';
+            emojiOverlay.style.top = '30%';
+            emojiOverlay.style.transform = 'translate(-50%, -50%)';
+            
+            // Check if user is premium (for demo purposes)
+            checkPremiumStatus();
+        }
+
+        // Check if user has premium (demo function)
+        function checkPremiumStatus() {
+            // In a real app, you would check from a database or local storage
+            isPremium = localStorage.getItem('moodMirrorPremium') === 'true';
+            if (isPremium) {
+                document.querySelectorAll('.premium-features').forEach(el => {
+                    el.style.display = 'none';
+                });
+            }
+        }
+
+        // Update download count with random increment
+        function updateDownloadCount() {
+            downloadCount += Math.floor(Math.random() * 10) + 1;
+            downloadCountElement.textContent = downloadCount.toLocaleString();
+            
+            // Save to local storage to persist count
+            localStorage.setItem('moodMirrorDownloads', downloadCount);
+        }
+
+        // Populate emoji tabs
+        function populateEmojiTabs() {
+            emojiTabs.innerHTML = '';
+            
+            for (const category in emojiCategories) {
+                const tab = document.createElement('div');
+                tab.className = 'emoji-tab';
+                tab.textContent = category.charAt(0).toUpperCase() + category.slice(1);
+                tab.onclick = () => showEmojiCategory(category);
+                emojiTabs.appendChild(tab);
+            }
+            
+            // Add premium tab
+            const premiumTab = document.createElement('div');
+            premiumTab.className = 'emoji-tab';
+            premiumTab.innerHTML = '⭐ Premium';
+            premiumTab.onclick = () => showEmojiCategory('premium');
+            emojiTabs.appendChild(premiumTab);
+            
+            // Activate the first tab
+            if (emojiTabs.firstChild) {
+                emojiTabs.firstChild.classList.add('active');
+            }
+        }
+
+        // Show emojis for a specific category
+        function showEmojiCategory(category) {
+            // Update active tab
+            const tabs = emojiTabs.getElementsByClassName('emoji-tab');
+            for (const tab of tabs) {
+                tab.classList.remove('active');
+                if (tab.textContent.toLowerCase().includes(category)) {
+                    tab.classList.add('active');
+                }
+            }
+            
+            // Clear the grid
+            emojiGrid.innerHTML = '';
+            
+            // Add emojis to grid
+            if (category === 'premium') {
+                if (!isPremium) {
+                    premiumEmojis.forEach(emoji => {
+                        const emojiElement = document.createElement('div');
+                        emojiElement.className = 'emoji premium';
+                        emojiElement.textContent = emoji;
+                        emojiElement.onclick = () => showMonetization();
+                        emojiGrid.appendChild(emojiElement);
+                    });
+                } else {
+                    premiumEmojis.forEach(emoji => {
+                        const emojiElement = document.createElement('div');
+                        emojiElement.className = 'emoji';
+                        emojiElement.textContent = emoji;
+                        emojiElement.onclick = () => selectEmoji(emoji);
+                        emojiGrid.appendChild(emojiElement);
+                    });
+                }
+            } else {
+                emojiCategories[category].forEach(emoji => {
+                    const emojiElement = document.createElement('div');
+                    emojiElement.className = 'emoji';
+                    emojiElement.textContent = emoji;
+                    emojiElement.onclick = () => selectEmoji(emoji);
+                    emojiGrid.appendChild(emojiElement);
+                });
+            }
+            
+            currentEmojiCategory = category;
+        }
+
+        // Populate caption dropdown - FIXED
+        function populateCaptionDropdown() {
+            captionSelect.innerHTML = '';
+            
+            // Add default option
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Select a caption...';
+            defaultOption.disabled = true;
+            defaultOption.selected = true;
+            captionSelect.appendChild(defaultOption);
+            
+            // Add custom caption option
+            const customOption = document.createElement('option');
+            customOption.value = 'custom';
+            customOption.textContent = 'Write my own caption...';
+            captionSelect.appendChild(customOption);
+            
+            // Add options from all categories
+            for (const category in memeCaptions) {
+                const optGroup = document.createElement('optgroup');
+                optGroup.label = category.charAt(0).toUpperCase() + category.slice(1) + ' Captions';
+                
+                memeCaptions[category].forEach(caption => {
+                    const option = document.createElement('option');
+                    option.value = caption;
+                    option.textContent = caption;
+                    optGroup.appendChild(option);
+                });
+                
+                captionSelect.appendChild(optGroup);
+            }
+            
+            // Add premium captions if user is premium
+            if (isPremium) {
+                const premiumOptGroup = document.createElement('optgroup');
+                premiumOptGroup.label = '⭐ Premium Captions';
+                
+                premiumCaptions.forEach(caption => {
+                    const option = document.createElement('option');
+                    option.value = caption;
+                    option.textContent = caption;
+                    premiumOptGroup.appendChild(option);
+                });
+                
+                captionSelect.appendChild(premiumOptGroup);
+            }
+        }
+
+        // Handle caption change
+        function handleCaptionChange() {
+            const selectedValue = captionSelect.value;
+            
+            if (selectedValue === 'custom') {
+                customCaption.style.display = 'block';
+                customCaption.value = '';
+                selectedCaption = '';
+            } else {
+                customCaption.style.display = 'none';
+                selectedCaption = selectedValue;
+            }
+        }
+
+        // Populate featured memes on home screen
+        function populateFeaturedMemes() {
+            // Create some sample featured memes
+            const samples = [
+                { caption: "My Monday mood", emoji: "😴" },
+                { caption: "When the code works", emoji: "🎉" },
+                { caption: "My social battery", emoji: "🔋" },
+                { caption: "My brain on caffeine", emoji: "⚡" }
+            ];
+            
+            samples.forEach(sample => {
+                const memeElement = document.createElement('div');
+                memeElement.className = 'meme-sample';
+                
+                // Create a canvas to generate the sample image
+                const canvas = document.createElement('canvas');
+                canvas.width = 300;
+                canvas.height = 300;
+                const ctx = canvas.getContext('2d');
+                
+                // Draw background
+                ctx.fillStyle = '#f8f9fa';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw text
+                ctx.font = '20px Arial';
+                ctx.fillStyle = '#333';
+                ctx.textAlign = 'center';
+                ctx.fillText(sample.caption, canvas.width / 2, 50);
+                
+                // Draw emoji
+                ctx.font = '80px Arial';
+                ctx.fillText(sample.emoji, canvas.width / 2, canvas.height / 2);
+                
+                // Create image from canvas
+                const dataUrl = canvas.toDataURL('image/png');
+                
+                memeElement.innerHTML = `
+                    <img src="${dataUrl}" alt="${sample.caption}">
+                    <p>${sample.caption}</p>
+                `;
+                
+                memeElement.onclick = () => {
+                    selectedEmoji = sample.emoji;
+                    emojiOverlay.textContent = selectedEmoji;
+                    uploadPhoto();
+                };
+                
+                featuredMemes.appendChild(memeElement);
+            });
+        }
 
         // Show home view
         function showHome() {
@@ -232,6 +941,11 @@
             cameraView.style.display = 'none';
             editorView.style.display = 'none';
             previewView.style.display = 'none';
+            emojiSelectionView.style.display = 'none';
+            monetizationView.style.display = 'none';
+            
+            // Update download count
+            updateDownloadCount();
             
             // Stop camera if it's running
             if (cameraVideo.srcObject) {
@@ -266,13 +980,44 @@
                 if (file) {
                     const reader = new FileReader();
                     reader.onload = event => {
-                        userPhotoData = event.target.result;
-                        photoPreview.src = userPhotoData;
-                        homeView.style.display = 'none';
-                        editorView.style.display = 'block';
-                        
-                        // Set initial emoji position
-                        positionEmoji();
+                        // Create image to check dimensions and resize if needed
+                        const img = new Image();
+                        img.onload = function() {
+                            const maxWidth = 800;
+                            const maxHeight = 800;
+                            let width = img.width;
+                            let height = img.height;
+
+                            if (width > height) {
+                                if (width > maxWidth) {
+                                    height = Math.round(height * maxWidth / width);
+                                    width = maxWidth;
+                                }
+                            } else {
+                                if (height > maxHeight) {
+                                    width = Math.round(width * maxHeight / height);
+                                    height = maxHeight;
+                                }
+                            }
+                            
+                            // Create canvas to resize image
+                            const canvas = document.createElement('canvas');
+                            canvas.width = width;
+                            canvas.height = height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, width, height);
+                            
+                            // Use resized image
+                            userPhotoData = canvas.toDataURL('image/jpeg', 0.8);
+                            photoPreview.src = userPhotoData;
+                            
+                            homeView.style.display = 'none';
+                            editorView.style.display = 'block';
+                            
+                            // Adjust font sizes after image loads
+                            setTimeout(adjustFontSizes, 100);
+                        };
+                        img.src = event.target.result;
                     };
                     reader.readAsDataURL(file);
                 }
@@ -280,14 +1025,22 @@
             input.click();
         }
 
-        // Position emoji correctly on the image
-        function positionEmoji() {
-            // Wait for image to load
-            setTimeout(() => {
-                const containerRect = photoPreview.getBoundingClientRect();
-                emojiOverlay.style.left = `${containerRect.width / 2 - 30}px`;
-                emojiOverlay.style.top = `${containerRect.height / 4}px`;
-            }, 100);
+        // Adjust font sizes based on container
+        function adjustFontSizes() {
+            const container = document.querySelector('.meme-container');
+            if (!container) return;
+            
+            const containerWidth = container.offsetWidth;
+            
+            // Adjust emoji size based on container
+            const emojiSize = Math.min(80, Math.max(24, containerWidth / 8));
+            emojiOverlay.style.fontSize = `${emojiSize}px`;
+            
+            // Adjust caption size
+            const captionSize = Math.min(18, Math.max(12, containerWidth / 30));
+            document.querySelectorAll('.caption-select, .custom-caption').forEach(el => {
+                el.style.fontSize = `${captionSize}px`;
+            });
         }
 
         // Capture photo from camera
@@ -306,8 +1059,20 @@
             cameraView.style.display = 'none';
             editorView.style.display = 'block';
             
-            // Position emoji
-            positionEmoji();
+            // Adjust font sizes
+            setTimeout(adjustFontSizes, 100);
+        }
+
+        // Show emoji selection view
+        function showEmojiSelection() {
+            editorView.style.display = 'none';
+            emojiSelectionView.style.display = 'block';
+        }
+
+        // Hide emoji selection view
+        function hideEmojiSelection() {
+            emojiSelectionView.style.display = 'none';
+            editorView.style.display = 'block';
         }
 
         // Select emoji
@@ -316,51 +1081,118 @@
             emojiOverlay.textContent = emoji;
         }
 
+        // Show monetization view
+        function showMonetization() {
+            editorView.style.display = 'none';
+            previewView.style.display = 'none';
+            emojiSelectionView.style.display = 'none';
+            monetizationView.style.display = 'block';
+        }
+
+        // Purchase premium
+        function purchasePremium(plan) {
+            alert(`Thank you for choosing ${plan} premium! In a real app, this would process payment.`);
+            isPremium = true;
+            localStorage.setItem('moodMirrorPremium', 'true');
+            showHome();
+        }
+
         // Generate final meme - FIXED VERSION
         function generateMeme() {
+            // Get the selected caption
+            if (captionSelect.value === 'custom') {
+                selectedCaption = customCaption.value.trim();
+            } else {
+                selectedCaption = captionSelect.value;
+            }
+            
+            // If no caption is selected, use a default one
+            if (!selectedCaption) {
+                selectedCaption = "Mood Mirror Meme";
+            }
+            
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             const img = new Image();
             
             img.onload = function() {
-                // Set canvas dimensions to match the image
-                canvas.width = img.width;
-                canvas.height = img.height;
+                // Use the natural image dimensions for highest quality
+                const width = img.naturalWidth;
+                const height = img.naturalHeight;
+                
+                canvas.width = width;
+                canvas.height = height;
                 
                 // Draw user photo
-                ctx.drawImage(img, 0, 0);
+                ctx.drawImage(img, 0, 0, width, height);
                 
-                // Calculate the scaling factor between the preview and actual image
-                const previewWidth = photoPreview.width;
-                const actualWidth = img.width;
-                const scaleFactor = actualWidth / previewWidth;
+                // Calculate scaling factor between displayed image and actual image
+                const previewRect = photoPreview.getBoundingClientRect();
+                const scaleX = width / previewRect.width;
+                const scaleY = height / previewRect.height;
                 
-                // Get the position of the emoji in the preview
+                // Get the current emoji position and size
                 const emojiRect = emojiOverlay.getBoundingClientRect();
                 const containerRect = photoPreview.getBoundingClientRect();
                 
-                // Calculate the position relative to the actual image dimensions
-                const emojiX = (emojiRect.left - containerRect.left) * scaleFactor;
-                const emojiY = (emojiRect.top - containerRect.top) * scaleFactor;
+                // Calculate position relative to the image
+                const relativeX = (emojiRect.left - containerRect.left) * scaleX;
+                const relativeY = (emojiRect.top - containerRect.top) * scaleY;
                 
-                // Scale the emoji size appropriately
-                const scaledEmojiSize = emojiSize * scaleFactor;
+                // Calculate scaled size
+                const computedStyle = window.getComputedStyle(emojiOverlay);
+                const emojiSizeValue = parseFloat(computedStyle.fontSize);
+                const scaledEmojiSize = emojiSizeValue * scaleX;
                 
-                // Add emoji to the canvas
+                // Add emoji
                 ctx.font = `bold ${scaledEmojiSize}px Arial`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText(selectedEmoji, emojiX + (scaledEmojiSize/2), emojiY + (scaledEmojiSize/2));
+                ctx.fillText(selectedEmoji, relativeX + (scaledEmojiSize/2), relativeY + (scaledEmojiSize/2));
                 
-                // Add caption
-                const caption = document.getElementById('captionSelect').value;
-                ctx.font = '30px Arial';
+                // Add caption with better text wrapping
+                const captionFontSize = Math.max(16, Math.min(30, width / 40));
+                ctx.font = `bold ${captionFontSize}px Arial`;
                 ctx.fillStyle = 'white';
                 ctx.strokeStyle = 'black';
-                ctx.lineWidth = 3;
+                ctx.lineWidth = Math.max(2, captionFontSize / 10);
                 ctx.textAlign = 'center';
-                ctx.strokeText(caption, canvas.width / 2, canvas.height - 50);
-                ctx.fillText(caption, canvas.width / 2, canvas.height - 50);
+                
+                // Simple text wrapping
+                const maxTextWidth = width * 0.9;
+                const lines = [];
+                let line = '';
+                const words = selectedCaption.split(' ');
+                
+                for (let i = 0; i < words.length; i++) {
+                    const testLine = line + words[i] + ' ';
+                    const metrics = ctx.measureText(testLine);
+                    if (metrics.width > maxTextWidth && i > 0) {
+                        lines.push(line);
+                        line = words[i] + ' ';
+                    } else {
+                        line = testLine;
+                    }
+                }
+                lines.push(line);
+                
+                // Draw text lines
+                const lineHeight = captionFontSize * 1.2;
+                const textY = height - (lines.length * lineHeight) - 20;
+                
+                lines.forEach((line, index) => {
+                    const y = textY + (index * lineHeight);
+                    ctx.strokeText(line, width / 2, y);
+                    ctx.fillText(line, width / 2, y);
+                });
+                
+                // Add watermark if not premium
+                if (!isPremium) {
+                    ctx.font = '16px Arial';
+                    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                    ctx.textAlign = 'right';
+                    ctx.fillText('Made with Mood Mirror', width - 10, height - 10);
+                }
                 
                 // Set final meme
                 finalMeme.src = canvas.toDataURL('image/png');
@@ -378,10 +1210,13 @@
             link.download = 'mood-mirror-meme.png';
             link.href = finalMeme.src;
             link.click();
+            
+            // Track download
+            updateDownloadCount();
         }
 
         // Share meme
-        function shareMeme() {
+        function shareMeme(platform) {
             if (navigator.share) {
                 navigator.share({
                     title: 'My Mood Mirror Meme',
@@ -390,10 +1225,16 @@
                 })
                 .catch(error => {
                     console.error('Error sharing:', error);
+                    alert(`Shared to ${platform}! In a real app, this would share directly.`);
                 });
             } else {
-                alert('Web Share API not supported in your browser. You can download and share the image manually.');
+                alert(`Shared to ${platform}! In a real app, this would share directly.`);
             }
+        }
+
+        // Share app
+        function shareApp(platform) {
+            alert(`Shared Mood Mirror on ${platform}! In a real app, this would share directly.`);
         }
 
         // Start over
@@ -401,8 +1242,16 @@
             previewView.style.display = 'none';
             homeView.style.display = 'block';
             selectedEmoji = '😊';
-            emojiOverlay.textContent = '😊';
             userPhotoData = null;
+            selectedCaption = '';
+            captionSelect.value = '';
+            customCaption.value = '';
+            customCaption.style.display = 'none';
+            
+            // Reset emoji position
+            emojiOverlay.style.left = '50%';
+            emojiOverlay.style.top = '30%';
+            emojiOverlay.style.transform = 'translate(-50%, -50%)';
         }
 
         // Make emoji draggable
@@ -411,8 +1260,9 @@
 
         emojiOverlay.addEventListener('mousedown', e => {
             isDragging = true;
-            offset.x = e.clientX - emojiOverlay.getBoundingClientRect().left;
-            offset.y = e.clientY - emojiOverlay.getBoundingClientRect().top;
+            const rect = emojiOverlay.getBoundingClientRect();
+            offset.x = e.clientX - rect.left;
+            offset.y = e.clientY - rect.top;
             emojiOverlay.style.cursor = 'grabbing';
         });
 
@@ -439,8 +1289,9 @@
         // Touch events for mobile
         emojiOverlay.addEventListener('touchstart', e => {
             isDragging = true;
-            offset.x = e.touches[0].clientX - emojiOverlay.getBoundingClientRect().left;
-            offset.y = e.touches[0].clientY - emojiOverlay.getBoundingClientRect().top;
+            const rect = emojiOverlay.getBoundingClientRect();
+            offset.x = e.touches[0].clientX - rect.left;
+            offset.y = e.touches[0].clientY - rect.top;
             e.preventDefault();
         });
 
@@ -464,6 +1315,9 @@
         document.addEventListener('touchend', () => {
             isDragging = false;
         });
+
+        // Initialize the app when the page loads
+        window.onload = initApp;
     </script>
 </body>
 </html>
