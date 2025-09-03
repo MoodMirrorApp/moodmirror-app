@@ -120,6 +120,11 @@
             object-fit: contain;
         }
         
+        /* Fix camera inversion */
+        #cameraVideo {
+            transform: scaleX(-1);
+        }
+        
         .emoji-tabs {
             display: flex;
             overflow-x: auto;
@@ -959,7 +964,7 @@
             cameraView.style.display = 'block';
             
             // Access camera
-            navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
             .then(stream => {
                 cameraVideo.srcObject = stream;
             })
@@ -1043,12 +1048,17 @@
             });
         }
 
-        // Capture photo from camera
+        // Capture photo from camera - FIXED (no longer inverted)
         function capturePhoto() {
             const canvas = document.createElement('canvas');
             canvas.width = cameraVideo.videoWidth;
             canvas.height = cameraVideo.videoHeight;
-            canvas.getContext('2d').drawImage(cameraVideo, 0, 0);
+            const ctx = canvas.getContext('2d');
+            
+            // Fix camera inversion by flipping the canvas back
+            ctx.translate(canvas.width, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(cameraVideo, 0, 0, canvas.width, canvas.height);
             
             userPhotoData = canvas.toDataURL('image/png');
             photoPreview.src = userPhotoData;
@@ -1097,7 +1107,7 @@
             showHome();
         }
 
-        // Generate final meme - FIXED VERSION
+        // Generate final meme - COMPLETELY FIXED VERSION
         function generateMeme() {
             // Get the selected caption
             if (captionSelect.value === 'custom') {
@@ -1128,18 +1138,20 @@
                 
                 // Calculate scaling factor between displayed image and actual image
                 const previewRect = photoPreview.getBoundingClientRect();
-                const scaleX = width / previewRect.width;
-                const scaleY = height / previewRect.height;
+                const imageRect = photoPreview.getBoundingClientRect();
+                
+                // Calculate scale factors
+                const scaleX = width / imageRect.width;
+                const scaleY = height / imageRect.height;
                 
                 // Get the current emoji position and size
                 const emojiRect = emojiOverlay.getBoundingClientRect();
-                const containerRect = photoPreview.getBoundingClientRect();
                 
                 // Calculate position relative to the image
-                const relativeX = (emojiRect.left - containerRect.left) * scaleX;
-                const relativeY = (emojiRect.top - containerRect.top) * scaleY;
+                const relativeX = (emojiRect.left - imageRect.left + (emojiRect.width / 2)) * scaleX;
+                const relativeY = (emojiRect.top - imageRect.top + (emojiRect.height / 2)) * scaleY;
                 
-                // Calculate scaled size
+                // Calculate scaled size - use the same scale factor for both dimensions
                 const computedStyle = window.getComputedStyle(emojiOverlay);
                 const emojiSizeValue = parseFloat(computedStyle.fontSize);
                 const scaledEmojiSize = emojiSizeValue * scaleX;
@@ -1148,7 +1160,7 @@
                 ctx.font = `bold ${scaledEmojiSize}px Arial`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText(selectedEmoji, relativeX + (scaledEmojiSize/2), relativeY + (scaledEmojiSize/2));
+                ctx.fillText(selectedEmoji, relativeX, relativeY);
                 
                 // Add caption with better text wrapping
                 const captionFontSize = Math.max(16, Math.min(30, width / 40));
