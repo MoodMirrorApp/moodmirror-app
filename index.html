@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mood Mirror - Fixed Emoji Size</title>
+    <style>
+        :root {
+            --primary: #6a11cb;
+            --secondary: #2575fc;
+            --light: #f8f9fa;
+            --dark: #343a40;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .btn {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 18px;
+            cursor: pointer;
+            margin: 10px 0;
+            transition: transform 0.3s, box-shadow 0.3s;
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        #cameraView, #editorView, #previewView {
+            display: none;
+            width: 100%;
+        }
+        
+        #cameraVideo, #photoPreview, #finalMeme {
+            width: 100%;
+            border-radius: 10px;
+            margin: 20px 0;
+            max-height: 50vh;
+            object-fit: contain;
+        }
+        
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .emoji {
+            font-size: 30px;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 10px;
+            background: white;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .emoji:hover {
+            background: #e9ecef;
+            transform: scale(1.2);
+        }
+        
+        .caption-select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #ced4da;
+            margin: 20px 0;
+            font-size: 16px;
+        }
+        
+        .meme-container {
+            position: relative;
+            width: 100%;
+            margin: 20px 0;
+            min-height: 300px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .meme-image {
+            width: 100%;
+            border-radius: 10px;
+            max-height: 400px;
+            object-fit: contain;
+        }
+        
+        .memoji-overlay {
+            position: absolute;
+            font-size: 60px;
+            cursor: grab;
+            user-select: none;
+            z-index: 10;
+        }
+        
+        .memoji-overlay:active {
+            cursor: grabbing;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Mood Mirror</h1>
+        <p>Your Daily Emoji Vibe</p>
+
+        <!-- Home View -->
+        <div id="homeView">
+            <button class="btn" onclick="showCamera()">Create Your Mood Meme</button>
+            <p>OR</p>
+            <button class="btn" onclick="uploadPhoto()">Choose from Gallery</button>
+        </div>
+
+        <!-- Camera View -->
+        <div id="cameraView">
+            <video id="cameraVideo" autoplay playsinline></video>
+            <button class="btn" onclick="capturePhoto()">Capture Photo</button>
+            <button class="btn" onclick="showHome()">Cancel</button>
+        </div>
+
+        <!-- Editor View -->
+        <div id="editorView">
+            <div class="meme-container">
+                <img id="photoPreview" alt="Your photo" class="meme-image">
+                <div id="emojiOverlay" class="memoji-overlay">😊</div>
+            </div>
+            
+            <p>Select an Emoji:</p>
+            <div class="emoji-grid" id="emojiGrid">
+                <div class="emoji" onclick="selectEmoji('😊')">😊</div>
+                <div class="emoji" onclick="selectEmoji('😢')">😢</div>
+                <div class="emoji" onclick="selectEmoji('😠')">😠</div>
+                <div class="emoji" onclick="selectEmoji('😍')">😍</div>
+                <div class="emoji" onclick="selectEmoji('🤔')">🤔</div>
+                <div class="emoji" onclick="selectEmoji('😴')">😴</div>
+                <div class="emoji" onclick="selectEmoji('😎')">😎</div>
+                <div class="emoji" onclick="selectEmoji('🥳')">🥳</div>
+                <div class="emoji" onclick="selectEmoji('🤯')">🤯</div>
+                <div class="emoji" onclick="selectEmoji('😭')">😭</div>
+            </div>
+            
+            <p>Choose a Caption:</p>
+            <select class="caption-select" id="captionSelect">
+                <option value="My Monday brain trying to function...">My Monday brain trying to function...</option>
+                <option value="Me remembering that thing I said 5 years ago.">Me remembering that thing I said 5 years ago.</option>
+                <option value="My wallet after the weekend:">My wallet after the weekend:</option>
+                <option value="My serotonin levels right now.">My serotonin levels right now.</option>
+            </select>
+            
+            <button class="btn" onclick="generateMeme()">Preview Your Masterpiece!</button>
+            <button class="btn" onclick="showHome()">Start Over</button>
+        </div>
+
+        <!-- Preview View -->
+        <div id="previewView">
+            <img id="finalMeme" alt="Your mood meme" class="meme-image">
+            <button class="btn" onclick="downloadMeme()">Download Meme</button>
+            <button class="btn" onclick="shareMeme()">Share Meme</button>
+            <button class="btn" onclick="startOver()">Create Another</button>
+        </div>
+    </div>
+
+    <script>
+        // State variables
+        let selectedEmoji = '😊';
+        let userPhotoData = null;
+        let emojiSize = 60; // Store the emoji size
+
+        // Elements
+        const homeView = document.getElementById('homeView');
+        const cameraView = document.getElementById('cameraView');
+        const editorView = document.getElementById('editorView');
+        const previewView = document.getElementById('previewView');
+        const cameraVideo = document.getElementById('cameraVideo');
+        const photoPreview = document.getElementById('photoPreview');
+        const emojiOverlay = document.getElementById('emojiOverlay');
+        const finalMeme = document.getElementById('finalMeme');
+
+        // Show home view
+        function showHome() {
+            homeView.style.display = 'block';
+            cameraView.style.display = 'none';
+            editorView.style.display = 'none';
+            previewView.style.display = 'none';
+            
+            // Stop camera if it's running
+            if (cameraVideo.srcObject) {
+                cameraVideo.srcObject.getTracks().forEach(track => track.stop());
+            }
+        }
+
+        // Show camera view
+        function showCamera() {
+            homeView.style.display = 'none';
+            cameraView.style.display = 'block';
+            
+            // Access camera
+            navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+            .then(stream => {
+                cameraVideo.srcObject = stream;
+            })
+            .catch(error => {
+                console.error('Error accessing camera:', error);
+                alert('Unable to access camera. Please check permissions.');
+                showHome();
+            });
+        }
+
+        // Upload photo from gallery
+        function uploadPhoto() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = e => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = event => {
+                        userPhotoData = event.target.result;
+                        photoPreview.src = userPhotoData;
+                        homeView.style.display = 'none';
+                        editorView.style.display = 'block';
+                        
+                        // Set initial emoji position
+                        positionEmoji();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            input.click();
+        }
+
+        // Position emoji correctly on the image
+        function positionEmoji() {
+            // Wait for image to load
+            setTimeout(() => {
+                const containerRect = photoPreview.getBoundingClientRect();
+                emojiOverlay.style.left = `${containerRect.width / 2 - 30}px`;
+                emojiOverlay.style.top = `${containerRect.height / 4}px`;
+            }, 100);
+        }
+
+        // Capture photo from camera
+        function capturePhoto() {
+            const canvas = document.createElement('canvas');
+            canvas.width = cameraVideo.videoWidth;
+            canvas.height = cameraVideo.videoHeight;
+            canvas.getContext('2d').drawImage(cameraVideo, 0, 0);
+            
+            userPhotoData = canvas.toDataURL('image/png');
+            photoPreview.src = userPhotoData;
+            
+            // Stop camera stream
+            cameraVideo.srcObject.getTracks().forEach(track => track.stop());
+            
+            cameraView.style.display = 'none';
+            editorView.style.display = 'block';
+            
+            // Position emoji
+            positionEmoji();
+        }
+
+        // Select emoji
+        function selectEmoji(emoji) {
+            selectedEmoji = emoji;
+            emojiOverlay.textContent = emoji;
+        }
+
+        // Generate final meme - FIXED VERSION
+        function generateMeme() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            
+            img.onload = function() {
+                // Set canvas dimensions to match the image
+                canvas.width = img.width;
+                canvas.height = img.height;
+                
+                // Draw user photo
+                ctx.drawImage(img, 0, 0);
+                
+                // Calculate the scaling factor between the preview and actual image
+                const previewWidth = photoPreview.width;
+                const actualWidth = img.width;
+                const scaleFactor = actualWidth / previewWidth;
+                
+                // Get the position of the emoji in the preview
+                const emojiRect = emojiOverlay.getBoundingClientRect();
+                const containerRect = photoPreview.getBoundingClientRect();
+                
+                // Calculate the position relative to the actual image dimensions
+                const emojiX = (emojiRect.left - containerRect.left) * scaleFactor;
+                const emojiY = (emojiRect.top - containerRect.top) * scaleFactor;
+                
+                // Scale the emoji size appropriately
+                const scaledEmojiSize = emojiSize * scaleFactor;
+                
+                // Add emoji to the canvas
+                ctx.font = `bold ${scaledEmojiSize}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(selectedEmoji, emojiX + (scaledEmojiSize/2), emojiY + (scaledEmojiSize/2));
+                
+                // Add caption
+                const caption = document.getElementById('captionSelect').value;
+                ctx.font = '30px Arial';
+                ctx.fillStyle = 'white';
+                ctx.strokeStyle = 'black';
+                ctx.lineWidth = 3;
+                ctx.textAlign = 'center';
+                ctx.strokeText(caption, canvas.width / 2, canvas.height - 50);
+                ctx.fillText(caption, canvas.width / 2, canvas.height - 50);
+                
+                // Set final meme
+                finalMeme.src = canvas.toDataURL('image/png');
+                
+                editorView.style.display = 'none';
+                previewView.style.display = 'block';
+            };
+            
+            img.src = userPhotoData;
+        }
+
+        // Download meme
+        function downloadMeme() {
+            const link = document.createElement('a');
+            link.download = 'mood-mirror-meme.png';
+            link.href = finalMeme.src;
+            link.click();
+        }
+
+        // Share meme
+        function shareMeme() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'My Mood Mirror Meme',
+                    text: 'Check out this meme I made with Mood Mirror!',
+                    url: window.location.href,
+                })
+                .catch(error => {
+                    console.error('Error sharing:', error);
+                });
+            } else {
+                alert('Web Share API not supported in your browser. You can download and share the image manually.');
+            }
+        }
+
+        // Start over
+        function startOver() {
+            previewView.style.display = 'none';
+            homeView.style.display = 'block';
+            selectedEmoji = '😊';
+            emojiOverlay.textContent = '😊';
+            userPhotoData = null;
+        }
+
+        // Make emoji draggable
+        let isDragging = false;
+        let offset = { x: 0, y: 0 };
+
+        emojiOverlay.addEventListener('mousedown', e => {
+            isDragging = true;
+            offset.x = e.clientX - emojiOverlay.getBoundingClientRect().left;
+            offset.y = e.clientY - emojiOverlay.getBoundingClientRect().top;
+            emojiOverlay.style.cursor = 'grabbing';
+        });
+
+        document.addEventListener('mousemove', e => {
+            if (isDragging) {
+                const containerRect = photoPreview.getBoundingClientRect();
+                let x = e.clientX - containerRect.left - offset.x;
+                let y = e.clientY - containerRect.top - offset.y;
+                
+                // Keep within bounds
+                x = Math.max(0, Math.min(x, containerRect.width - emojiOverlay.offsetWidth));
+                y = Math.max(0, Math.min(y, containerRect.height - emojiOverlay.offsetHeight));
+                
+                emojiOverlay.style.left = `${x}px`;
+                emojiOverlay.style.top = `${y}px`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            emojiOverlay.style.cursor = 'grab';
+        });
+
+        // Touch events for mobile
+        emojiOverlay.addEventListener('touchstart', e => {
+            isDragging = true;
+            offset.x = e.touches[0].clientX - emojiOverlay.getBoundingClientRect().left;
+            offset.y = e.touches[0].clientY - emojiOverlay.getBoundingClientRect().top;
+            e.preventDefault();
+        });
+
+        document.addEventListener('touchmove', e => {
+            if (isDragging) {
+                const containerRect = photoPreview.getBoundingClientRect();
+                let x = e.touches[0].clientX - containerRect.left - offset.x;
+                let y = e.touches[0].clientY - containerRect.top - offset.y;
+                
+                // Keep within bounds
+                x = Math.max(0, Math.min(x, containerRect.width - emojiOverlay.offsetWidth));
+                y = Math.max(0, Math.min(y, containerRect.height - emojiOverlay.offsetHeight));
+                
+                emojiOverlay.style.left = `${x}px`;
+                emojiOverlay.style.top = `${y}px`;
+                
+                e.preventDefault();
+            }
+        });
+
+        document.addEventListener('touchend', () => {
+            isDragging = false;
+        });
+    </script>
+</body>
+</html>
