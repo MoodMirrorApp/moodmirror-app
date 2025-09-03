@@ -192,8 +192,8 @@
             padding: 12px;
             border-radius: 10px;
             border: 1px solid #ced4da;
-            margin: 20px 0;
-            font-size: 16px;
+            margin: 16px 0;
+            font-size: 50px;
         }
         
         .meme-container {
@@ -277,7 +277,7 @@
             border-radius: 10px;
             border: 1px solid #ced4da;
             margin-top: 10px;
-            font-size: 16px;
+            font-size: 50px;
             display: none;
         }
         
@@ -1163,7 +1163,7 @@
                 ctx.fillText(selectedEmoji, relativeX, relativeY);
                 
                 // Add caption with better text wrapping
-                const captionFontSize = Math.max(16, Math.min(30, width / 40));
+                const captionFontSize = Math.max(20, Math.min(40, width / 30));
                 ctx.font = `bold ${captionFontSize}px Arial`;
                 ctx.fillStyle = 'white';
                 ctx.strokeStyle = 'black';
