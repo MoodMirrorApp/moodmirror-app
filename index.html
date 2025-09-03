@@ -160,13 +160,15 @@
         }
         
         .emoji {
-            font-size: 30px;
+            font-size: 40px; /* Increased from 30px */
             cursor: pointer;
             padding: 10px;
             border-radius: 10px;
             background: white;
             transition: all 0.3s;
             text-align: center;
+            vertical-align: middle;
+            line-height: 1.5;
         }
         
         .emoji:hover {
@@ -184,16 +186,16 @@
             position: absolute;
             top: 2px;
             right: 2px;
-            font-size: 46px;
+            font-size: 10px;
         }
         
-        .caption-select {
+        .caption-select, .custom-caption {
             width: 100%;
-            padding: 12px;
+            padding: 15px; /* Increased padding */
             border-radius: 10px;
             border: 1px solid #ced4da;
-            margin: 16px 0;
-            font-size: 50px;
+            margin: 20px 0;
+            font-size: 20px; /* Increased from 16px */
         }
         
         .meme-container {
@@ -217,10 +219,13 @@
         
         .memoji-overlay {
             position: absolute;
-            font-size: 60px;
+            font-size: 100px; /* Increased from 60px */
             cursor: grab;
             user-select: none;
             z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .memoji-overlay:active {
@@ -277,7 +282,7 @@
             border-radius: 10px;
             border: 1px solid #ced4da;
             margin-top: 10px;
-            font-size: 50px;
+            font-size: 20px; /* Increased from 16px */
             display: none;
         }
         
@@ -331,11 +336,11 @@
         
         @media (max-width: 768px) {
             .memoji-overlay {
-                font-size: 8vw;
+                font-size: 15vw; /* Increased from 8vw */
             }
             
             .caption-select, .custom-caption {
-                font-size: 4vw;
+                font-size: 5vw; /* Increased from 4vw */
             }
             
             .emoji-grid {
@@ -345,11 +350,11 @@
         
         @media (max-width: 480px) {
             .memoji-overlay {
-                font-size: 10vw;
+                font-size: 18vw; /* Increased from 10vw */
             }
             
             .caption-select, .custom-caption {
-                font-size: 5vw;
+                font-size: 6vw; /* Increased from 5vw */
             }
             
             .container {
@@ -1038,11 +1043,11 @@
             const containerWidth = container.offsetWidth;
             
             // Adjust emoji size based on container
-            const emojiSize = Math.min(80, Math.max(24, containerWidth / 8));
+            const emojiSize = Math.min(100, Math.max(40, containerWidth / 6));
             emojiOverlay.style.fontSize = `${emojiSize}px`;
             
             // Adjust caption size
-            const captionSize = Math.min(18, Math.max(12, containerWidth / 30));
+            const captionSize = Math.min(20, Math.max(14, containerWidth / 25));
             document.querySelectorAll('.caption-select, .custom-caption').forEach(el => {
                 el.style.fontSize = `${captionSize}px`;
             });
@@ -1107,7 +1112,7 @@
             showHome();
         }
 
-        // Generate final meme - COMPLETELY FIXED VERSION
+        // Generate final meme - COMPLETELY FIXED VERSION with larger emojis and captions
         function generateMeme() {
             // Get the selected caption
             if (captionSelect.value === 'custom') {
@@ -1154,7 +1159,7 @@
                 // Calculate scaled size - use the same scale factor for both dimensions
                 const computedStyle = window.getComputedStyle(emojiOverlay);
                 const emojiSizeValue = parseFloat(computedStyle.fontSize);
-                const scaledEmojiSize = emojiSizeValue * scaleX * 2.5
+                const scaledEmojiSize = emojiSizeValue * scaleX * 1.5; // Increased multiplier for larger emojis
                 
                 // Add emoji
                 ctx.font = `bold ${scaledEmojiSize}px Arial`;
@@ -1163,11 +1168,11 @@
                 ctx.fillText(selectedEmoji, relativeX, relativeY);
                 
                 // Add caption with better text wrapping
-                const captionFontSize = Math.max(20, Math.min(40, width / 40));
+                const captionFontSize = Math.max(24, Math.min(48, width / 20)); // Increased sizes
                 ctx.font = `bold ${captionFontSize}px Arial`;
                 ctx.fillStyle = 'white';
                 ctx.strokeStyle = 'black';
-                ctx.lineWidth = Math.max(2, captionFontSize / 40);
+                ctx.lineWidth = Math.max(3, captionFontSize / 8); // Increased line width
                 ctx.textAlign = 'center';
                 
                 // Simple text wrapping
@@ -1189,8 +1194,8 @@
                 lines.push(line);
                 
                 // Draw text lines
-                const lineHeight = captionFontSize * 1.2;
-                const textY = height - (lines.length * lineHeight) - 20;
+                const lineHeight = captionFontSize * 1.4; // Increased line height
+                const textY = height - (lines.length * lineHeight) - 30; // Moved text up slightly
                 
                 lines.forEach((line, index) => {
                     const y = textY + (index * lineHeight);
@@ -1200,10 +1205,10 @@
                 
                 // Add watermark if not premium
                 if (!isPremium) {
-                    ctx.font = '16px Arial';
+                    ctx.font = '20px Arial'; // Increased watermark size
                     ctx.fillStyle = 'rgba(0,0,0,0.3)';
                     ctx.textAlign = 'right';
-                    ctx.fillText('Made with Mood Mirror', width - 10, height - 10);
+                    ctx.fillText('Made with Mood Mirror', width - 15, height - 15);
                 }
                 
                 // Set final meme
