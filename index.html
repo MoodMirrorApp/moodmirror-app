@@ -1163,11 +1163,11 @@
                 ctx.fillText(selectedEmoji, relativeX, relativeY);
                 
                 // Add caption with better text wrapping
-                const captionFontSize = Math.max(20, Math.min(40, width / 30));
+                const captionFontSize = Math.max(20, Math.min(40, width / 40));
                 ctx.font = `bold ${captionFontSize}px Arial`;
                 ctx.fillStyle = 'white';
                 ctx.strokeStyle = 'black';
-                ctx.lineWidth = Math.max(2, captionFontSize / 20);
+                ctx.lineWidth = Math.max(2, captionFontSize / 40);
                 ctx.textAlign = 'center';
                 
                 // Simple text wrapping
