@@ -1154,7 +1154,7 @@
                 // Calculate scaled size - use the same scale factor for both dimensions
                 const computedStyle = window.getComputedStyle(emojiOverlay);
                 const emojiSizeValue = parseFloat(computedStyle.fontSize);
-                const scaledEmojiSize = emojiSizeValue * scaleX * 1.2
+                const scaledEmojiSize = emojiSizeValue * scaleX * 1.6
                 
                 // Add emoji
                 ctx.font = `bold ${scaledEmojiSize}px Arial`;
@@ -1167,7 +1167,7 @@
                 ctx.font = `bold ${captionFontSize}px Arial`;
                 ctx.fillStyle = 'white';
                 ctx.strokeStyle = 'black';
-                ctx.lineWidth = Math.max(2, captionFontSize / 10);
+                ctx.lineWidth = Math.max(2, captionFontSize / 20);
                 ctx.textAlign = 'center';
                 
                 // Simple text wrapping
