@@ -1796,11 +1796,11 @@
                 ctx.font = `bold ${captionFontSize}px Arial`;
                 ctx.fillStyle = 'white';
                 ctx.strokeStyle = 'black';
-                ctx.lineWidth = Math.max(2, captionFontSize / 10);
+                ctx.lineWidth = Math.max(2, captionFontSize / 80);
                 ctx.textAlign = 'center';
                 
                 // Simple text wrapping
-                const maxTextWidth = width * 0.9;
+                const maxTextWidth = width * 1.1;
                 const lines = [];
                 let line = '';
                 const words = selectedCaption.split(' ');
