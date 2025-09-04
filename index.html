@@ -120,11 +120,6 @@
             object-fit: contain;
         }
         
-        /* Fix camera inversion */
-        #cameraVideo {
-            transform: scaleX(-1);
-        }
-        
         .emoji-tabs {
             display: flex;
             overflow-x: auto;
@@ -160,20 +155,24 @@
         }
         
         .emoji {
-            font-size: 40px; /* Increased from 30px */
+            font-size: 30px;
             cursor: pointer;
             padding: 10px;
             border-radius: 10px;
             background: white;
             transition: all 0.3s;
             text-align: center;
-            vertical-align: middle;
-            line-height: 1.5;
+            position: relative;
         }
         
         .emoji:hover {
             background: #e9ecef;
-            transform: scale(1.2);
+            transform: scale(1.1);
+        }
+        
+        .emoji.selected {
+            background: #d4edda;
+            box-shadow: 0 0 0 2px var(--success);
         }
         
         .emoji.premium {
@@ -189,13 +188,13 @@
             font-size: 10px;
         }
         
-        .caption-select, .custom-caption {
+        .caption-select {
             width: 100%;
-            padding: 15px; /* Increased padding */
+            padding: 12px;
             border-radius: 10px;
             border: 1px solid #ced4da;
             margin: 20px 0;
-            font-size: 20px; /* Increased from 16px */
+            font-size: 16px;
         }
         
         .meme-container {
@@ -217,19 +216,46 @@
             object-fit: contain;
         }
         
+        .emoji-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
         .memoji-overlay {
             position: absolute;
-            font-size: 100px; /* Increased from 60px */
+            font-size: 64px; /* Increased by 60% from 40px */
             cursor: grab;
             user-select: none;
             z-index: 10;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            transform: translate(-50%, -50%);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            pointer-events: all;
+            transition: font-size 0.2s ease;
         }
         
         .memoji-overlay:active {
             cursor: grabbing;
+        }
+        
+        .resize-handle {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: var(--primary);
+            border-radius: 50%;
+            bottom: -8px;
+            right: -8px;
+            cursor: nwse-resize;
+            z-index: 20;
+            display: none;
+        }
+        
+        .memoji-overlay.premium .resize-handle {
+            display: block;
         }
         
         .category-title {
@@ -282,8 +308,20 @@
             border-radius: 10px;
             border: 1px solid #ced4da;
             margin-top: 10px;
-            font-size: 20px; /* Increased from 16px */
+            font-size: 16px;
             display: none;
+        }
+        
+        .custom-caption.premium {
+            font-size: 18px;
+            padding: 14px;
+            border: 2px solid var(--premium);
+        }
+        
+        .caption-area p {
+            font-size: 18px;
+            margin-bottom: 8px;
+            font-weight: 500;
         }
         
         .watermark {
@@ -334,13 +372,46 @@
             margin-bottom: 8px;
         }
         
+        .selection-info {
+            margin: 10px 0;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+        
+        .emoji-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        
+        .emoji-control-btn {
+            padding: 8px 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
         @media (max-width: 768px) {
             .memoji-overlay {
-                font-size: 15vw; /* Increased from 8vw */
+                font-size: 48px; /* Increased for tablets */
             }
             
             .caption-select, .custom-caption {
-                font-size: 5vw; /* Increased from 4vw */
+                font-size: 16px;
+            }
+            
+            .custom-caption.premium {
+                font-size: 16px;
+            }
+            
+            .caption-area p {
+                font-size: 16px;
             }
             
             .emoji-grid {
@@ -350,11 +421,19 @@
         
         @media (max-width: 480px) {
             .memoji-overlay {
-                font-size: 18vw; /* Increased from 10vw */
+                font-size: 40px; /* Increased for phones */
             }
             
             .caption-select, .custom-caption {
-                font-size: 6vw; /* Increased from 5vw */
+                font-size: 16px;
+            }
+            
+            .custom-caption.premium {
+                font-size: 16px;
+            }
+            
+            .caption-area p {
+                font-size: 16px;
             }
             
             .container {
@@ -478,11 +557,17 @@
         <div id="editorView">
             <div class="meme-container">
                 <img id="photoPreview" alt="Your photo" class="meme-image">
-                <div id="emojiOverlay" class="memoji-overlay">😊</div>
+                <div id="emojiContainer" class="emoji-container">
+                    <!-- Emojis will be added here as individual elements -->
+                </div>
                 <div class="watermark">Made with Mood Mirror</div>
             </div>
             
-            <button class="btn" onclick="showEmojiSelection()">Select Emoji</button>
+            <div class="emoji-controls">
+                <button class="emoji-control-btn" onclick="showEmojiSelection()">Add Emoji</button>
+                <button class="emoji-control-btn" onclick="removeSelectedEmoji()">Remove Selected</button>
+                <button class="emoji-control-btn" onclick="clearAllEmojis()">Clear All</button>
+            </div>
             
             <div class="caption-area">
                 <p>Choose a Caption:</p>
@@ -505,6 +590,11 @@
         <!-- Emoji Selection View -->
         <div id="emojiSelectionView">
             <h2>Select an Emoji</h2>
+            
+            <div class="selection-info" id="selectionInfo">
+                Select up to 3 emojis
+            </div>
+            
             <div class="emoji-tabs" id="emojiTabs">
                 <!-- Will be populated by JavaScript -->
             </div>
@@ -515,7 +605,7 @@
             
             <div class="premium-features">
                 <h3>⭐ Premium Emojis</h3>
-                <p>Unlock exclusive emojis with Premium!</p>
+                <p>Unlock exclusive emojis and multi-emoji selection with Premium!</p>
                 <button class="btn btn-premium" onclick="showMonetization()">Unlock Premium</button>
             </div>
             
@@ -549,20 +639,15 @@
             <p>Upgrade to unlock amazing features!</p>
             
             <div class="premium-features">
-                <h3>Premium Features:</h3>
+                <p>With Premium, you'll get access to:</p>
                 <ul>
-                    <li>✅ Remove Watermark from all memes</li>
-                    <li>✅ 100+ Exclusive Premium Emojis</li>
-                    <li>✅ Advanced Meme Templates</li>
-                    <li>✅ Premium Caption Library</li>
-                    <li>✅ Ad-Free Experience</li>
-                    <li>✅ Priority Support</li>
+                    <li>Multiple emoji selection</li>
+                    <li>Individual emoji dragging & resizing</li>
+                    <li>Exclusive premium emojis</li>
+                    <li>Watermark-free downloads</li>
                 </ul>
                 
-                <h3>Choose Your Plan:</h3>
-                <button class="btn btn-premium" onclick="purchasePremium('monthly')">$2.99/month</button>
-                <button class="btn btn-premium" onclick="purchasePremium('yearly')">$19.99/year (Save 45%)</button>
-                <button class="btn btn-premium" onclick="purchasePremium('lifetime')">$49.99 (One-Time)</button>
+                <button class="btn btn-premium" onclick="purchasePremium()">Get Premium</button>
             </div>
             
             <button class="btn btn-secondary" onclick="showHome()">Maybe Later</button>
@@ -571,12 +656,15 @@
 
     <script>
         // State variables
-        let selectedEmoji = '😊';
+        let selectedEmojis = []; // Array of objects: {id, emoji, x, y, size}
         let userPhotoData = null;
         let currentEmojiCategory = 'smileys';
         let selectedCaption = '';
         let isPremium = false;
         let downloadCount = 1247;
+        let nextEmojiId = 1;
+        let currentlyDragging = null;
+        let currentlyResizing = null;
 
         // Elements
         const homeView = document.getElementById('homeView');
@@ -587,7 +675,7 @@
         const monetizationView = document.getElementById('monetizationView');
         const cameraVideo = document.getElementById('cameraVideo');
         const photoPreview = document.getElementById('photoPreview');
-        const emojiOverlay = document.getElementById('emojiOverlay');
+        const emojiContainer = document.getElementById('emojiContainer');
         const finalMeme = document.getElementById('finalMeme');
         const emojiTabs = document.getElementById('emojiTabs');
         const emojiGrid = document.getElementById('emojiGrid');
@@ -595,6 +683,7 @@
         const customCaption = document.getElementById('customCaption');
         const featuredMemes = document.getElementById('featuredMemes');
         const downloadCountElement = document.getElementById('downloadCount');
+        const selectionInfo = document.getElementById('selectionInfo');
 
         // Hundreds of emojis organized by category
         const emojiCategories = {
@@ -730,11 +819,6 @@
             populateFeaturedMemes();
             updateDownloadCount();
             
-            // Set initial emoji position
-            emojiOverlay.style.left = '50%';
-            emojiOverlay.style.top = '30%';
-            emojiOverlay.style.transform = 'translate(-50%, -50%)';
-            
             // Check if user is premium (for demo purposes)
             checkPremiumStatus();
         }
@@ -747,6 +831,12 @@
                 document.querySelectorAll('.premium-features').forEach(el => {
                     el.style.display = 'none';
                 });
+                // Add premium class to custom caption for larger text
+                customCaption.classList.add('premium');
+                // Update selection info for premium users
+                selectionInfo.textContent = 'Select up to 3 emojis';
+            } else {
+                selectionInfo.textContent = 'Select one emoji';
             }
         }
 
@@ -830,7 +920,293 @@
             currentEmojiCategory = category;
         }
 
-        // Populate caption dropdown - FIXED
+        // Select emoji (updated for multiple selection)
+        function selectEmoji(emoji) {
+            if (isPremium) {
+                // Premium users can select up to 3 emojis
+                if (selectedEmojis.length >= 3) {
+                    alert('Premium limit: You can select up to 3 emojis');
+                    return;
+                }
+            } else {
+                // Non-premium users can only select one emoji
+                if (selectedEmojis.length >= 1) {
+                    alert('Upgrade to Premium to use multiple emojis');
+                    return;
+                }
+            }
+            
+            // Add emoji with a unique ID and default position
+            const id = nextEmojiId++;
+            selectedEmojis.push({
+                id: id,
+                emoji: emoji,
+                x: 50, // percentage
+                y: 30,  // percentage
+                size: 64 // default size in pixels (increased by 60%)
+            });
+            
+            // Add the emoji to the editor view
+            addEmojiToEditor(id, emoji, 64);
+            
+            // Update selection info
+            if (isPremium) {
+                selectionInfo.textContent = `Selected ${selectedEmojis.length}/3 emojis`;
+            }
+        }
+
+        // Add an emoji to the editor view
+        function addEmojiToEditor(id, emoji, size) {
+            const emojiElement = document.createElement('div');
+            emojiElement.className = 'memoji-overlay' + (isPremium ? ' premium' : '');
+            emojiElement.textContent = emoji;
+            emojiElement.dataset.id = id;
+            emojiElement.style.left = '50%';
+            emojiElement.style.top = '30%';
+            emojiElement.style.fontSize = `${size}px`;
+            
+            // Add resize handle for premium users
+            if (isPremium) {
+                const resizeHandle = document.createElement('div');
+                resizeHandle.className = 'resize-handle';
+                emojiElement.appendChild(resizeHandle);
+                
+                // Make resize handle functional
+                makeResizeHandleFunctional(resizeHandle, emojiElement);
+            }
+            
+            // Add drag functionality
+            makeEmojiDraggable(emojiElement);
+            
+            emojiContainer.appendChild(emojiElement);
+        }
+
+        // Make an emoji draggable
+        function makeEmojiDraggable(emojiElement) {
+            let isDragging = false;
+            let offset = { x: 0, y: 0 };
+            
+            emojiElement.addEventListener('mousedown', e => {
+                // Ignore if clicking on resize handle
+                if (e.target.classList.contains('resize-handle')) return;
+                
+                isDragging = true;
+                currentlyDragging = emojiElement;
+                const rect = emojiElement.getBoundingClientRect();
+                offset.x = e.clientX - rect.left;
+                offset.y = e.clientY - rect.top;
+                emojiElement.style.cursor = 'grabbing';
+                
+                // Bring to front
+                document.querySelectorAll('.memoji-overlay').forEach(el => {
+                    el.style.zIndex = 10;
+                });
+                emojiElement.style.zIndex = 100;
+                
+                e.stopPropagation();
+            });
+
+            document.addEventListener('mousemove', e => {
+                if (isDragging && currentlyDragging === emojiElement) {
+                    const containerRect = emojiContainer.getBoundingClientRect();
+                    let x = e.clientX - containerRect.left - offset.x;
+                    let y = e.clientY - containerRect.top - offset.y;
+                    
+                    // Keep within bounds
+                    x = Math.max(0, Math.min(x, containerRect.width - emojiElement.offsetWidth));
+                    y = Math.max(0, Math.min(y, containerRect.height - emojiElement.offsetHeight));
+                    
+                    emojiElement.style.left = `${x}px`;
+                    emojiElement.style.top = `${y}px`;
+                    
+                    // Update the position in our data model
+                    const id = parseInt(emojiElement.dataset.id);
+                    const emojiObj = selectedEmojis.find(e => e.id === id);
+                    if (emojiObj) {
+                        emojiObj.x = (x / containerRect.width) * 100;
+                        emojiObj.y = (y / containerRect.height) * 100;
+                    }
+                    
+                    e.preventDefault();
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isDragging && currentlyDragging === emojiElement) {
+                    isDragging = false;
+                    currentlyDragging = null;
+                    emojiElement.style.cursor = 'grab';
+                }
+            });
+
+            // Touch events for mobile
+            emojiElement.addEventListener('touchstart', e => {
+                // Ignore if touching on resize handle
+                if (e.target.classList.contains('resize-handle')) return;
+                
+                isDragging = true;
+                currentlyDragging = emojiElement;
+                const rect = emojiElement.getBoundingClientRect();
+                offset.x = e.touches[0].clientX - rect.left;
+                offset.y = e.touches[0].clientY - rect.top;
+                
+                // Bring to front
+                document.querySelectorAll('.memoji-overlay').forEach(el => {
+                    el.style.zIndex = 10;
+                });
+                emojiElement.style.zIndex = 100;
+                
+                e.stopPropagation();
+            });
+
+            document.addEventListener('touchmove', e => {
+                if (isDragging && currentlyDragging === emojiElement) {
+                    const containerRect = emojiContainer.getBoundingClientRect();
+                    let x = e.touches[0].clientX - containerRect.left - offset.x;
+                    let y = e.touches[0].clientY - containerRect.top - offset.y;
+                    
+                    // Keep within bounds
+                    x = Math.max(0, Math.min(x, containerRect.width - emojiElement.offsetWidth));
+                    y = Math.max(0, Math.min(y, containerRect.height - emojiElement.offsetHeight));
+                    
+                    emojiElement.style.left = `${x}px`;
+                    emojiElement.style.top = `${y}px`;
+                    
+                    // Update the position in our data model
+                    const id = parseInt(emojiElement.dataset.id);
+                    const emojiObj = selectedEmojis.find(e => e.id === id);
+                    if (emojiObj) {
+                        emojiObj.x = (x / containerRect.width) * 100;
+                        emojiObj.y = (y / containerRect.height) * 100;
+                    }
+                    
+                    e.preventDefault();
+                }
+            });
+
+            document.addEventListener('touchend', () => {
+                if (isDragging && currentlyDragging === emojiElement) {
+                    isDragging = false;
+                    currentlyDragging = null;
+                }
+            });
+        }
+
+        // Make resize handle functional
+        function makeResizeHandleFunctional(resizeHandle, emojiElement) {
+            let isResizing = false;
+            let startX, startY, startWidth, startHeight;
+            
+            resizeHandle.addEventListener('mousedown', e => {
+                isResizing = true;
+                currentlyResizing = emojiElement;
+                startX = e.clientX;
+                startY = e.clientY;
+                startWidth = parseInt(emojiElement.style.fontSize, 10) || 64;
+                
+                e.stopPropagation();
+            });
+            
+            document.addEventListener('mousemove', e => {
+                if (isResizing && currentlyResizing === emojiElement) {
+                    const deltaX = e.clientX - startX;
+                    const deltaY = e.clientY - startY;
+                    
+                    // Calculate new size (use the larger of the two deltas)
+                    const delta = Math.max(Math.abs(deltaX), Math.abs(deltaY));
+                    const sizeDelta = delta * (deltaX > 0 ? 1 : -1);
+                    const newSize = Math.max(24, Math.min(200, startWidth + sizeDelta));
+                    
+                    // Apply new size
+                    emojiElement.style.fontSize = `${newSize}px`;
+                    
+                    // Update the size in our data model
+                    const id = parseInt(emojiElement.dataset.id);
+                    const emojiObj = selectedEmojis.find(e => e.id === id);
+                    if (emojiObj) {
+                        emojiObj.size = newSize;
+                    }
+                    
+                    e.preventDefault();
+                }
+            });
+            
+            document.addEventListener('mouseup', () => {
+                if (isResizing && currentlyResizing === emojiElement) {
+                    isResizing = false;
+                    currentlyResizing = null;
+                }
+            });
+            
+            // Touch events for mobile
+            resizeHandle.addEventListener('touchstart', e => {
+                isResizing = true;
+                currentlyResizing = emojiElement;
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+                startWidth = parseInt(emojiElement.style.fontSize, 10) || 64;
+                
+                e.stopPropagation();
+            });
+            
+            document.addEventListener('touchmove', e => {
+                if (isResizing && currentlyResizing === emojiElement) {
+                    const deltaX = e.touches[0].clientX - startX;
+                    const deltaY = e.touches[0].clientY - startY;
+                    
+                    // Calculate new size (use the larger of the two deltas)
+                    const delta = Math.max(Math.abs(deltaX), Math.abs(deltaY));
+                    const sizeDelta = delta * (deltaX > 0 ? 1 : -1);
+                    const newSize = Math.max(24, Math.min(200, startWidth + sizeDelta));
+                    
+                    // Apply new size
+                    emojiElement.style.fontSize = `${newSize}px`;
+                    
+                    // Update the size in our data model
+                    const id = parseInt(emojiElement.dataset.id);
+                    const emojiObj = selectedEmojis.find(e => e.id === id);
+                    if (emojiObj) {
+                        emojiObj.size = newSize;
+                    }
+                    
+                    e.preventDefault();
+                }
+            });
+            
+            document.addEventListener('touchend', () => {
+                if (isResizing && currentlyResizing === emojiElement) {
+                    isResizing = false;
+                    currentlyResizing = null;
+                }
+            });
+        }
+
+        // Remove the currently selected emoji
+        function removeSelectedEmoji() {
+            if (currentlyDragging) {
+                const id = parseInt(currentlyDragging.dataset.id);
+                // Remove from data
+                selectedEmojis = selectedEmojis.filter(e => e.id !== id);
+                // Remove from DOM
+                currentlyDragging.remove();
+                currentlyDragging = null;
+            } else if (selectedEmojis.length > 0) {
+                // Remove the last added emoji if none is selected
+                const lastEmoji = selectedEmojis.pop();
+                const element = document.querySelector(`.memoji-overlay[data-id="${lastEmoji.id}"]`);
+                if (element) element.remove();
+            }
+        }
+
+        // Clear all emojis
+        function clearAllEmojis() {
+            selectedEmojis = [];
+            emojiContainer.innerHTML = '';
+            currentlyDragging = null;
+            currentlyResizing = null;
+        }
+
+        // Populate caption dropdown
         function populateCaptionDropdown() {
             captionSelect.innerHTML = '';
             
@@ -936,8 +1312,8 @@
                 `;
                 
                 memeElement.onclick = () => {
-                    selectedEmoji = sample.emoji;
-                    emojiOverlay.textContent = selectedEmoji;
+                    clearAllEmojis();
+                    selectEmoji(sample.emoji);
                     uploadPhoto();
                 };
                 
@@ -969,7 +1345,7 @@
             cameraView.style.display = 'block';
             
             // Access camera
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
+            navigator.mediaDevices.getUserMedia({ video: true, audio: false })
             .then(stream => {
                 cameraVideo.srcObject = stream;
             })
@@ -1024,8 +1400,8 @@
                             homeView.style.display = 'none';
                             editorView.style.display = 'block';
                             
-                            // Adjust font sizes after image loads
-                            setTimeout(adjustFontSizes, 100);
+                            // Position emojis based on their stored percentages
+                            positionEmojis();
                         };
                         img.src = event.target.result;
                     };
@@ -1033,6 +1409,22 @@
                 }
             };
             input.click();
+        }
+
+        // Position emojis based on their stored percentages
+        function positionEmojis() {
+            const containerRect = emojiContainer.getBoundingClientRect();
+            
+            selectedEmojis.forEach(emojiObj => {
+                const element = document.querySelector(`.memoji-overlay[data-id="${emojiObj.id}"]`);
+                if (element) {
+                    const x = (emojiObj.x / 100) * containerRect.width;
+                    const y = (emojiObj.y / 100) * containerRect.height;
+                    element.style.left = `${x}px`;
+                    element.style.top = `${y}px`;
+                    element.style.fontSize = `${emojiObj.size}px`;
+                }
+            });
         }
 
         // Adjust font sizes based on container
@@ -1043,27 +1435,34 @@
             const containerWidth = container.offsetWidth;
             
             // Adjust emoji size based on container
-            const emojiSize = Math.min(100, Math.max(40, containerWidth / 6));
-            emojiOverlay.style.fontSize = `${emojiSize}px`;
+            const emojiSize = Math.min(80, Math.max(24, containerWidth / 8));
+            document.querySelectorAll('.memoji-overlay').forEach(el => {
+                // Only adjust if not premium (premium users set their own sizes)
+                if (!isPremium) {
+                    el.style.fontSize = `${emojiSize}px`;
+                    
+                    // Update the size in our data model
+                    const id = parseInt(el.dataset.id);
+                    const emojiObj = selectedEmojis.find(e => e.id === id);
+                    if (emojiObj) {
+                        emojiObj.size = emojiSize;
+                    }
+                }
+            });
             
             // Adjust caption size
-            const captionSize = Math.min(20, Math.max(14, containerWidth / 25));
+            const captionSize = Math.min(18, Math.max(12, containerWidth / 30));
             document.querySelectorAll('.caption-select, .custom-caption').forEach(el => {
                 el.style.fontSize = `${captionSize}px`;
             });
         }
 
-        // Capture photo from camera - FIXED (no longer inverted)
+        // Capture photo from camera
         function capturePhoto() {
             const canvas = document.createElement('canvas');
             canvas.width = cameraVideo.videoWidth;
             canvas.height = cameraVideo.videoHeight;
-            const ctx = canvas.getContext('2d');
-            
-            // Fix camera inversion by flipping the canvas back
-            ctx.translate(canvas.width, 0);
-            ctx.scale(-1, 1);
-            ctx.drawImage(cameraVideo, 0, 0, canvas.width, canvas.height);
+            canvas.getContext('2d').drawImage(cameraVideo, 0, 0);
             
             userPhotoData = canvas.toDataURL('image/png');
             photoPreview.src = userPhotoData;
@@ -1074,8 +1473,11 @@
             cameraView.style.display = 'none';
             editorView.style.display = 'block';
             
-            // Adjust font sizes
-            setTimeout(adjustFontSizes, 100);
+            // Position emojis based on their stored percentages
+            setTimeout(() => {
+                positionEmojis();
+                adjustFontSizes();
+            }, 100);
         }
 
         // Show emoji selection view
@@ -1090,12 +1492,6 @@
             editorView.style.display = 'block';
         }
 
-        // Select emoji
-        function selectEmoji(emoji) {
-            selectedEmoji = emoji;
-            emojiOverlay.textContent = emoji;
-        }
-
         // Show monetization view
         function showMonetization() {
             editorView.style.display = 'none';
@@ -1105,14 +1501,39 @@
         }
 
         // Purchase premium
-        function purchasePremium(plan) {
-            alert(`Thank you for choosing ${plan} premium! In a real app, this would process payment.`);
+        function purchasePremium() {
+            alert(`Thank you for choosing Premium! In a real app, this would process payment.`);
             isPremium = true;
             localStorage.setItem('moodMirrorPremium', 'true');
+            
+            // Add premium class to custom caption for larger text
+            customCaption.classList.add('premium');
+            
+            // Update selection info for premium users
+            selectionInfo.textContent = 'Select up to 3 emojis';
+            
+            // Add resize handles to existing emojis
+            document.querySelectorAll('.memoji-overlay').forEach(el => {
+                el.classList.add('premium');
+                
+                const resizeHandle = document.createElement('div');
+                resizeHandle.className = 'resize-handle';
+                el.appendChild(resizeHandle);
+                
+                // Make resize handle functional
+                makeResizeHandleFunctional(resizeHandle, el);
+            });
+            
+            // Refresh the emoji grid to show premium emojis
+            showEmojiCategory(currentEmojiCategory);
+            
+            // Refresh caption dropdown to show premium options
+            populateCaptionDropdown();
+            
             showHome();
         }
 
-        // Generate final meme - COMPLETELY FIXED VERSION with larger emojis and captions
+        // Generate final meme
         function generateMeme() {
             // Get the selected caption
             if (captionSelect.value === 'custom') {
@@ -1131,9 +1552,23 @@
             const img = new Image();
             
             img.onload = function() {
-                // Use the natural image dimensions for highest quality
-                const width = img.naturalWidth;
-                const height = img.naturalHeight;
+                // Calculate dimensions maintaining aspect ratio
+                const maxWidth = 1200;
+                const maxHeight = 1200;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height = Math.round(height * maxWidth / width);
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width = Math.round(width * maxHeight / height);
+                        height = maxHeight;
+                    }
+                }
                 
                 canvas.width = width;
                 canvas.height = height;
@@ -1141,38 +1576,30 @@
                 // Draw user photo
                 ctx.drawImage(img, 0, 0, width, height);
                 
-                // Calculate scaling factor between displayed image and actual image
-                const previewRect = photoPreview.getBoundingClientRect();
-                const imageRect = photoPreview.getBoundingClientRect();
+                // Calculate scaled font sizes based on image dimensions
+                const captionFontSize = Math.max(16, Math.min(30, width / 40));
                 
-                // Calculate scale factors
-                const scaleX = width / imageRect.width;
-                const scaleY = height / imageRect.height;
-                
-                // Get the current emoji position and size
-                const emojiRect = emojiOverlay.getBoundingClientRect();
-                
-                // Calculate position relative to the image
-                const relativeX = (emojiRect.left - imageRect.left + (emojiRect.width / 2)) * scaleX;
-                const relativeY = (emojiRect.top - imageRect.top + (emojiRect.height / 2)) * scaleY;
-                
-                // Calculate scaled size - use the same scale factor for both dimensions
-                const computedStyle = window.getComputedStyle(emojiOverlay);
-                const emojiSizeValue = parseFloat(computedStyle.fontSize);
-                const scaledEmojiSize = emojiSizeValue * scaleX * 1.5; // Increased multiplier for larger emojis
-                
-                // Add emoji
-                ctx.font = `bold ${scaledEmojiSize}px Arial`;
+                // Add emoji(s)
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText(selectedEmoji, relativeX, relativeY);
+                
+                // Draw each emoji at its stored position and size
+                selectedEmojis.forEach(emojiObj => {
+                    const x = (emojiObj.x / 100) * width;
+                    const y = (emojiObj.y / 100) * height;
+                    
+                    // Calculate font size relative to image dimensions
+                    const emojiFontSize = Math.max(30, Math.min(150, emojiObj.size * (width / 500)));
+                    
+                    ctx.font = `bold ${emojiFontSize}px Arial`;
+                    ctx.fillText(emojiObj.emoji, x, y);
+                });
                 
                 // Add caption with better text wrapping
-                const captionFontSize = Math.max(24, Math.min(48, width / 20)); // Increased sizes
                 ctx.font = `bold ${captionFontSize}px Arial`;
                 ctx.fillStyle = 'white';
                 ctx.strokeStyle = 'black';
-                ctx.lineWidth = Math.max(3, captionFontSize / 8); // Increased line width
+                ctx.lineWidth = Math.max(2, captionFontSize / 10);
                 ctx.textAlign = 'center';
                 
                 // Simple text wrapping
@@ -1194,8 +1621,8 @@
                 lines.push(line);
                 
                 // Draw text lines
-                const lineHeight = captionFontSize * 1.4; // Increased line height
-                const textY = height - (lines.length * lineHeight) - 30; // Moved text up slightly
+                const lineHeight = captionFontSize * 1.2;
+                const textY = height - (lines.length * lineHeight) - 20;
                 
                 lines.forEach((line, index) => {
                     const y = textY + (index * lineHeight);
@@ -1205,10 +1632,10 @@
                 
                 // Add watermark if not premium
                 if (!isPremium) {
-                    ctx.font = '20px Arial'; // Increased watermark size
+                    ctx.font = '16px Arial';
                     ctx.fillStyle = 'rgba(0,0,0,0.3)';
                     ctx.textAlign = 'right';
-                    ctx.fillText('Made with Mood Mirror', width - 15, height - 15);
+                    ctx.fillText('Made with Mood Mirror', width - 10, height - 10);
                 }
                 
                 // Set final meme
@@ -1258,80 +1685,18 @@
         function startOver() {
             previewView.style.display = 'none';
             homeView.style.display = 'block';
-            selectedEmoji = '😊';
+            selectedEmojis = [];
             userPhotoData = null;
             selectedCaption = '';
             captionSelect.value = '';
             customCaption.value = '';
             customCaption.style.display = 'none';
+            currentlyDragging = null;
+            currentlyResizing = null;
             
-            // Reset emoji position
-            emojiOverlay.style.left = '50%';
-            emojiOverlay.style.top = '30%';
-            emojiOverlay.style.transform = 'translate(-50%, -50%)';
+            // Clear emoji container
+            emojiContainer.innerHTML = '';
         }
-
-        // Make emoji draggable
-        let isDragging = false;
-        let offset = { x: 0, y: 0 };
-
-        emojiOverlay.addEventListener('mousedown', e => {
-            isDragging = true;
-            const rect = emojiOverlay.getBoundingClientRect();
-            offset.x = e.clientX - rect.left;
-            offset.y = e.clientY - rect.top;
-            emojiOverlay.style.cursor = 'grabbing';
-        });
-
-        document.addEventListener('mousemove', e => {
-            if (isDragging) {
-                const containerRect = photoPreview.getBoundingClientRect();
-                let x = e.clientX - containerRect.left - offset.x;
-                let y = e.clientY - containerRect.top - offset.y;
-                
-                // Keep within bounds
-                x = Math.max(0, Math.min(x, containerRect.width - emojiOverlay.offsetWidth));
-                y = Math.max(0, Math.min(y, containerRect.height - emojiOverlay.offsetHeight));
-                
-                emojiOverlay.style.left = `${x}px`;
-                emojiOverlay.style.top = `${y}px`;
-            }
-        });
-
-        document.addEventListener('mouseup', () => {
-            isDragging = false;
-            emojiOverlay.style.cursor = 'grab';
-        });
-
-        // Touch events for mobile
-        emojiOverlay.addEventListener('touchstart', e => {
-            isDragging = true;
-            const rect = emojiOverlay.getBoundingClientRect();
-            offset.x = e.touches[0].clientX - rect.left;
-            offset.y = e.touches[0].clientY - rect.top;
-            e.preventDefault();
-        });
-
-        document.addEventListener('touchmove', e => {
-            if (isDragging) {
-                const containerRect = photoPreview.getBoundingClientRect();
-                let x = e.touches[0].clientX - containerRect.left - offset.x;
-                let y = e.touches[0].clientY - containerRect.top - offset.y;
-                
-                // Keep within bounds
-                x = Math.max(0, Math.min(x, containerRect.width - emojiOverlay.offsetWidth));
-                y = Math.max(0, Math.min(y, containerRect.height - emojiOverlay.offsetHeight));
-                
-                emojiOverlay.style.left = `${x}px`;
-                emojiOverlay.style.top = `${y}px`;
-                
-                e.preventDefault();
-            }
-        });
-
-        document.addEventListener('touchend', () => {
-            isDragging = false;
-        });
 
         // Initialize the app when the page loads
         window.onload = initApp;
